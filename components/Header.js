@@ -10,6 +10,7 @@ export default function Header() {
         <nav className="hidden md:flex items-center gap-6 font-body text-sm text-slate">
           <Link href="/services/distance" className="hover:text-ink">Services à distance</Link>
           <Link href="/services/presentiel" className="hover:text-ink">Services présentiels</Link>
+          <Link href="/profil" className="hover:text-ink">Mon profil</Link>
         </nav>
         <div className="flex items-center gap-3">
           <Link href="/login" className="text-sm text-slate hover:text-ink">Connexion</Link>
