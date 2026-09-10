@@ -8,6 +8,7 @@ import { regionsCameroun } from "@/lib/cameroun";
 export default function Register() {
   const [role, setRole] = useState("client");
   const [nom, setNom] = useState("");
+  const [telephone, setTelephone] = useState("");
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
   const [region, setRegion] = useState("");
@@ -37,7 +38,7 @@ export default function Register() {
       email,
       password: motDePasse,
       options: {
-        data: { nom, role, region, departement },
+        data: { nom, telephone, role, region, departement },
       },
     });
 
@@ -74,6 +75,11 @@ export default function Register() {
         <input
           type="text" placeholder="Nom complet" required
           value={nom} onChange={(e) => setNom(e.target.value)}
+          className="border border-ink/20 rounded-lg px-4 py-3 text-sm"
+        />
+        <input
+          type="tel" placeholder="Téléphone (ex: 6XX XXX XXX)" required
+          value={telephone} onChange={(e) => setTelephone(e.target.value)}
           className="border border-ink/20 rounded-lg px-4 py-3 text-sm"
         />
         <input
