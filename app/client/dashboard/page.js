@@ -144,6 +144,14 @@ export default function ClientDashboard() {
               <h3 className="font-display font-bold text-lg mt-2">{s.titre}</h3>
               {s.description && <p className="text-sm text-slate mt-2">{s.description}</p>}
               <p className="text-xs text-slate mt-3">Proposé par {s.profiles?.nom || "un acteur"}</p>
+              {s.telephone && (
+                <a
+                  href={`tel:${s.telephone}`}
+                  className="inline-block mt-1 text-sm font-medium text-verified"
+                >
+                  📞 {s.telephone}
+                </a>
+              )}
 
               {confirmes.includes(s.id) ? (
                 <p className="mt-4 text-sm text-verified font-medium">Demande envoyée ✓</p>
