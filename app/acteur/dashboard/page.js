@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
-import { servicesDistance, servicesPresentiels } from "@/lib/data";
+import { domainesServices } from "@/lib/data";
 
 export default function ActeurDashboard() {
   const supabase = createClient();
@@ -11,17 +11,15 @@ export default function ActeurDashboard() {
   const [demandesRecues, setDemandesRecues] = useState([]);
   const [chargement, setChargement] = useState(true);
 
-  const [type, setType] = useState("distance");
   const [domaine, setDomaine] = useState("");
+  const [domainePersonnalise, setDomainePersonnalise] = useState("");
   const [titre, setTitre] = useState("");
   const [description, setDescription] = useState("");
   const [telephone, setTelephone] = useState("");
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState("");
 
-  const domainesDisponibles = (type === "distance" ? servicesDistance : servicesPresentiels).map(
-    (s) => s.nom
-  );
+  const domaineFinal = domaine === "autre" ? domainePersonnalise.trim() : domaine;
 
   useEffect(() => {
     async function charger() {
@@ -63,7 +61,7 @@ export default function ActeurDashboard() {
     e.preventDefault();
     setErreur("");
 
-    if (!domaine || !titre || !telephone) {
+    if (!domaineFinal || !titre || !telephone) {
       setErreur("Merci de remplir au moins le domaine, le titre et le téléphone.");
       return;
     }
@@ -72,7 +70,14 @@ export default function ActeurDashboard() {
 
     const { data, error } = await supabase
       .from("services")
-      .insert({ acteur_id: userId, type, domaine, titre, description, telephone })
+      .insert({
+        acteur_id: userId,
+        type: "distance", // conservé en interne pour compatibilité, non affiché
+        domaine: domaineFinal,
+        titre,
+        description,
+        telephone,
+      })
       .select()
       .single();
 
@@ -87,6 +92,7 @@ export default function ActeurDashboard() {
     setTitre("");
     setDescription("");
     setDomaine("");
+    setDomainePersonnalise("");
     setTelephone("");
   }
 
@@ -111,30 +117,25 @@ export default function ActeurDashboard() {
         <div>
           <h2 className="font-display font-bold text-lg mb-4">Ajouter un service</h2>
           <form onSubmit={ajouterService} className="grid gap-4">
-            <div className="flex gap-2">
-              {["distance", "presentiel"].map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => { setType(t); setDomaine(""); }}
-                  className={`flex-1 py-2 rounded-full text-sm font-medium border ${
-                    type === t ? "bg-ink text-paper border-ink" : "border-ink/20 text-slate"
-                  }`}
-                >
-                  {t === "distance" ? "À distance" : "Présentiel"}
-                </button>
-              ))}
-            </div>
-
             <select
               required value={domaine} onChange={(e) => setDomaine(e.target.value)}
               className="border border-ink/20 rounded-lg px-4 py-3 text-sm bg-white"
             >
               <option value="">Choisir un domaine</option>
-              {domainesDisponibles.map((d) => (
+              {domainesServices.map((d) => (
                 <option key={d} value={d}>{d}</option>
               ))}
+              <option value="autre">Autre (préciser)</option>
             </select>
+
+            {domaine === "autre" && (
+              <input
+                type="text" placeholder="Précisez votre domaine" required
+                value={domainePersonnalise}
+                onChange={(e) => setDomainePersonnalise(e.target.value)}
+                className="border border-ink/20 rounded-lg px-4 py-3 text-sm"
+              />
+            )}
 
             <input
               type="text" placeholder="Titre du service" required
