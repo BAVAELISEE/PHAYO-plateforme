@@ -8,8 +8,7 @@ export default function Header() {
           Plateforme<span className="text-amber">.</span>
         </Link>
         <nav className="hidden md:flex items-center gap-6 font-body text-sm text-slate">
-          <Link href="/services/distance" className="hover:text-ink">Services à distance</Link>
-          <Link href="/services/presentiel" className="hover:text-ink">Services présentiels</Link>
+          <Link href="/services" className="hover:text-ink">Services</Link>
           <Link href="/profil" className="hover:text-ink">Mon profil</Link>
         </nav>
         <div className="flex items-center gap-3">
