@@ -16,7 +16,6 @@ export default function ClientDashboard() {
 
   const [demandes, setDemandes] = useState([]);
   const [servicesDisponibles, setServicesDisponibles] = useState([]);
-  const [filtreType, setFiltreType] = useState("distance");
 
   const [demandeOuverte, setDemandeOuverte] = useState(null);
   const [telephone, setTelephone] = useState("");
@@ -68,7 +67,11 @@ export default function ClientDashboard() {
     }
   }
 
-  const servicesFiltres = servicesDisponibles.filter((s) => s.type === filtreType);
+  const parDomaine = servicesDisponibles.reduce((acc, s) => {
+    acc[s.domaine] = acc[s.domaine] || [];
+    acc[s.domaine].push(s);
+    return acc;
+  }, {});
 
   if (chargement) {
     return <p className="max-w-6xl mx-auto px-6 py-16 text-sm text-slate">Chargement...</p>;
@@ -114,76 +117,67 @@ export default function ClientDashboard() {
         </div>
       </div>
 
-      {/* Services disponibles */}
+      {/* Services disponibles, groupés par domaine */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display font-bold text-lg">Services disponibles</h2>
-          <div className="flex gap-2">
-            {["distance", "presentiel"].map((t) => (
-              <button
-                key={t}
-                onClick={() => setFiltreType(t)}
-                className={`text-xs px-3 py-1.5 rounded-full border font-medium ${
-                  filtreType === t ? "bg-ink text-paper border-ink" : "border-ink/20 text-slate"
-                }`}
-              >
-                {t === "distance" ? "À distance" : "Présentiel"}
-              </button>
-            ))}
-          </div>
-        </div>
+        <h2 className="font-display font-bold text-lg mb-6">Services disponibles</h2>
 
-        {servicesFiltres.length === 0 && (
-          <p className="text-sm text-slate">Aucun service disponible dans cette catégorie pour le moment.</p>
+        {servicesDisponibles.length === 0 && (
+          <p className="text-sm text-slate">Aucun service disponible pour le moment.</p>
         )}
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {servicesFiltres.map((s) => (
-            <div key={s.id} className="border border-ink/10 rounded-2xl p-6">
-              <span className="font-mono text-xs text-amber">{s.domaine}</span>
-              <h3 className="font-display font-bold text-lg mt-2">{s.titre}</h3>
-              {s.description && <p className="text-sm text-slate mt-2">{s.description}</p>}
-              <p className="text-xs text-slate mt-3">Proposé par {s.profiles?.nom || "un acteur"}</p>
-              {s.telephone && (
-                <a
-                  href={`tel:${s.telephone}`}
-                  className="inline-block mt-1 text-sm font-medium text-verified"
-                >
-                  📞 {s.telephone}
-                </a>
-              )}
+        {Object.entries(parDomaine).map(([domaine, servicesDuDomaine]) => (
+          <div key={domaine} className="mb-10">
+            <h3 className="font-mono text-xs text-amber uppercase tracking-widest mb-3">
+              {domaine}
+            </h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              {servicesDuDomaine.map((s) => (
+                <div key={s.id} className="border border-ink/10 rounded-2xl p-6">
+                  <h3 className="font-display font-bold text-lg">{s.titre}</h3>
+                  {s.description && <p className="text-sm text-slate mt-2">{s.description}</p>}
+                  <p className="text-xs text-slate mt-3">Proposé par {s.profiles?.nom || "un acteur"}</p>
+                  {s.telephone && (
+                    <a
+                      href={`tel:${s.telephone}`}
+                      className="inline-block mt-1 text-sm font-medium text-verified"
+                    >
+                      📞 {s.telephone}
+                    </a>
+                  )}
 
-              {confirmes.includes(s.id) ? (
-                <p className="mt-4 text-sm text-verified font-medium">Demande envoyée ✓</p>
-              ) : demandeOuverte === s.id ? (
-                <div className="mt-4 grid gap-2">
-                  <input
-                    type="tel"
-                    placeholder="Votre numéro (ex: 6XX XXX XXX)"
-                    value={telephone}
-                    onChange={(e) => setTelephone(e.target.value)}
-                    className="border border-ink/20 rounded-lg px-3 py-2 text-sm"
-                    autoFocus
-                  />
-                  <button
-                    onClick={() => envoyerDemande(s)}
-                    disabled={envoi || !telephone}
-                    className="bg-ink text-paper text-sm font-medium py-2 rounded-full disabled:opacity-50"
-                  >
-                    {envoi ? "Envoi..." : "Confirmer la demande"}
-                  </button>
+                  {confirmes.includes(s.id) ? (
+                    <p className="mt-4 text-sm text-verified font-medium">Demande envoyée ✓</p>
+                  ) : demandeOuverte === s.id ? (
+                    <div className="mt-4 grid gap-2">
+                      <input
+                        type="tel"
+                        placeholder="Votre numéro (ex: 6XX XXX XXX)"
+                        value={telephone}
+                        onChange={(e) => setTelephone(e.target.value)}
+                        className="border border-ink/20 rounded-lg px-3 py-2 text-sm"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => envoyerDemande(s)}
+                        disabled={envoi || !telephone}
+                        className="bg-ink text-paper text-sm font-medium py-2 rounded-full disabled:opacity-50"
+                      >
+                        {envoi ? "Envoi..." : "Confirmer la demande"}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setDemandeOuverte(s.id)}
+                      className="mt-4 block text-sm font-medium text-ink hover:text-amber transition-colors"
+                    >
+                      Demander ce service →
+                    </button>
+                  )}
                 </div>
-              ) : (
-                <button
-                  onClick={() => setDemandeOuverte(s.id)}
-                  className="mt-4 text-sm font-medium text-ink hover:text-amber transition-colors"
-                >
-                  Demander ce service →
-                </button>
-              )}
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </section>
   );
