@@ -8,6 +8,7 @@ export default function ActeurDashboard() {
   const supabase = createClient();
   const [userId, setUserId] = useState(null);
   const [mesServices, setMesServices] = useState([]);
+  const [mesArticles, setMesArticles] = useState([]);
   const [demandesRecues, setDemandesRecues] = useState([]);
   const [chargement, setChargement] = useState(true);
 
@@ -35,16 +36,22 @@ export default function ActeurDashboard() {
         .select("*")
         .eq("acteur_id", user.id)
         .order("created_at", { ascending: false });
-
       setMesServices(data || []);
+
+      const { data: articles } = await supabase
+        .from("articles")
+        .select("*")
+        .eq("auteur_id", user.id)
+        .order("created_at", { ascending: false });
+      setMesArticles(articles || []);
 
       const { data: demandes } = await supabase
         .from("demandes")
         .select("*, services (titre, domaine), profiles:client_id (nom, region, departement)")
         .eq("acteur_id", user.id)
         .order("created_at", { ascending: false });
-
       setDemandesRecues(demandes || []);
+
       setChargement(false);
     }
     charger();
@@ -52,9 +59,7 @@ export default function ActeurDashboard() {
 
   async function changerStatut(id, statut) {
     await supabase.from("demandes").update({ statut }).eq("id", id);
-    setDemandesRecues((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, statut } : d))
-    );
+    setDemandesRecues((prev) => prev.map((d) => (d.id === id ? { ...d, statut } : d)));
   }
 
   async function ajouterService(e) {
@@ -70,14 +75,7 @@ export default function ActeurDashboard() {
 
     const { data, error } = await supabase
       .from("services")
-      .insert({
-        acteur_id: userId,
-        type: "distance", // conservé en interne pour compatibilité, non affiché
-        domaine: domaineFinal,
-        titre,
-        description,
-        telephone,
-      })
+      .insert({ acteur_id: userId, type: "distance", domaine: domaineFinal, titre, description, telephone })
       .select()
       .single();
 
@@ -89,11 +87,17 @@ export default function ActeurDashboard() {
     }
 
     setMesServices([data, ...mesServices]);
-    setTitre("");
-    setDescription("");
-    setDomaine("");
-    setDomainePersonnalise("");
-    setTelephone("");
+    setTitre(""); setDescription(""); setDomaine(""); setDomainePersonnalise(""); setTelephone("");
+  }
+
+  async function supprimerService(id) {
+    await supabase.from("services").delete().eq("id", id);
+    setMesServices((prev) => prev.filter((s) => s.id !== id));
+  }
+
+  async function supprimerArticle(id) {
+    await supabase.from("articles").delete().eq("id", id);
+    setMesArticles((prev) => prev.filter((a) => a.id !== id));
   }
 
   if (chargement) {
@@ -148,7 +152,7 @@ export default function ActeurDashboard() {
               className="border border-ink/20 rounded-lg px-4 py-3 text-sm"
             />
             <input
-              type="tel" placeholder="Votre numéro pour ce service (ex: 6XX XXX XXX)" required
+              type="tel" placeholder="Votre numéro pour ce service" required
               value={telephone} onChange={(e) => setTelephone(e.target.value)}
               className="border border-ink/20 rounded-lg px-4 py-3 text-sm"
             />
@@ -173,25 +177,57 @@ export default function ActeurDashboard() {
               <div key={s.id} className="border border-ink/10 rounded-2xl p-5">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-xs text-amber">{s.domaine}</span>
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full ${
-                      s.verifie ? "bg-verified/10 text-verified" : "bg-slate/10 text-slate"
-                    }`}
-                  >
+                  <span className={`text-xs px-2 py-1 rounded-full ${s.verifie ? "bg-verified/10 text-verified" : "bg-slate/10 text-slate"}`}>
                     {s.verifie ? "Vérifié" : "En attente de vérification"}
                   </span>
                 </div>
                 <h3 className="font-display font-bold mt-2">{s.titre}</h3>
                 {s.description && <p className="text-sm text-slate mt-1">{s.description}</p>}
-                {s.telephone && (
-                  <p className="text-xs text-slate mt-2">📞 {s.telephone}</p>
-                )}
+                {s.telephone && <p className="text-xs text-slate mt-2">📞 {s.telephone}</p>}
+                <button
+                  onClick={() => supprimerService(s.id)}
+                  className="mt-3 text-xs font-medium text-red-600 hover:underline"
+                >
+                  Supprimer ce service
+                </button>
               </div>
             ))}
           </div>
         </div>
       </div>
 
+      {/* Mes articles */}
+      <div className="mt-16">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-display font-bold text-lg">Mes articles</h2>
+          <a href="/articles/ajouter" className="text-sm font-medium text-ink hover:text-amber">
+            + Ajouter un article
+          </a>
+        </div>
+        {mesArticles.length === 0 && (
+          <p className="text-sm text-slate">Vous n'avez pas encore ajouté d'article.</p>
+        )}
+        <div className="grid md:grid-cols-3 gap-4">
+          {mesArticles.map((a) => (
+            <div key={a.id} className="border border-ink/10 rounded-2xl overflow-hidden">
+              {a.photos?.[0] && (
+                <img src={a.photos[0]} alt={a.nom} className="w-full h-32 object-cover" />
+              )}
+              <div className="p-4">
+                <h3 className="font-display font-bold">{a.nom}</h3>
+                <button
+                  onClick={() => supprimerArticle(a.id)}
+                  className="mt-2 text-xs font-medium text-red-600 hover:underline"
+                >
+                  Supprimer cet article
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Demandes reçues */}
       <div className="mt-16">
         <h2 className="font-display font-bold text-lg mb-4">Demandes reçues</h2>
         {demandesRecues.length === 0 && (
@@ -206,10 +242,7 @@ export default function ActeurDashboard() {
                 Client : {d.profiles?.nom || "—"} — {d.profiles?.region}, {d.profiles?.departement}
               </p>
               {d.telephone && (
-                <a
-                  href={`tel:${d.telephone}`}
-                  className="inline-block mt-2 text-sm font-medium text-ink hover:text-amber"
-                >
+                <a href={`tel:${d.telephone}`} className="inline-block mt-2 text-sm font-medium text-ink hover:text-amber">
                   📞 {d.telephone}
                 </a>
               )}
