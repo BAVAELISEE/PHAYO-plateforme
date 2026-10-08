@@ -16,23 +16,7 @@ export default function Footer() {
           </div>
 
           <div className="flex gap-4">
-            <a
-              href="https://whatsapp.com/channel/0029Vb98OtHGE56fBwx6371l"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-verified hover:underline font-medium"
-            >
-              
-            </a>
-            <a
-              href="https://chat.whatsapp.com/K9MOnC8uxb0AKjGQuY9JkJ?s=sw&p=a&mlu=4&ilr=4"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-verified hover:underline font-medium"
-            >
-              
-            </a>
-          </div>
+                     </div>
         </div>
       </div>
     </footer>
