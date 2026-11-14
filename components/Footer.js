@@ -17,6 +17,9 @@ export default function Footer() {
             <Link href="/services" className="hover:text-paper">Services</Link>
             <Link href="/articles" className="hover:text-paper">Articles</Link>
             <Link href="/profil" className="hover:text-paper">Mon profil</Link>
+            <Link href="/a-propos" className="hover:text-paper">À propos</Link>
+            <Link href="/contact" className="hover:text-paper">Contact</Link>
+            <Link href="/confidentialite" className="hover:text-paper">Politique de confidentialité</Link>
           </div>
         </div>
 
